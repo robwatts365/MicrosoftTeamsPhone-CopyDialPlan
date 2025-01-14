@@ -33,6 +33,7 @@ IN NO EVENT SHALL MICROSOFT OR ITS SUPPLIERS BE LIABLE FOR ANY DAMAGES WHATSOEVE
 
 BECAUSE SOME STATES DO NOT ALLOW THE EXCLUSION OR LIMITATION OF LIABILITY FOR CONSEQUENTIAL OR INCIDENTAL DAMAGES, THE ABOVE LIMITATION MAY NOT APPLY TO YOU.", "***DISCLAIMER***", [Windows.Forms.MessageBoxButtons]::OK, [Windows.Forms.MessageBoxIcon]::Warning)
 
+#Check to see if Microsoft Teams PowerShell module is installed
 Write-Host "Checking if MicrosoftTeams module exists..."
 If (-not(Get-InstalledModule MicrosoftTeams -ErrorAction silentlycontinue)) {
     Write-Host "404: MicrosoftTeams module not found. Please install Teams PowerShell module." -ForegroundColor DarkRed
@@ -48,13 +49,25 @@ Import-Module MicrosoftTeams
 Write-Host "Connecting to the Mother Ship (Microsoft Teams)..."
 Connect-MicrosoftTeams
 
+# Shows Gridview of Dial Plans, user selects Dial Plan to copy from
 $FromDialPlan = Get-CsTenantDialPlan | Select-Object Identity, Description | Out-GridView -OutputMode Single -Title "Please select a Dial Plan to copy from."
+
+# Shows Normalisation Rules of selected Dial Plan
 (Get-CsTenantDialPlan -Identity $FromDialPlan.Identity).NormalizationRules
+
+# Pause for user to check Normalisation Rules
 Write-Host "Please check dial plan normalisation rules above. If happy to proceed, press any key to continue"
 Pause
+
+# Shows Gridview of Dial Plans, user selects Dial Plan to copy to
 $ToDialPlan = Get-CsTenantDialPlan | Select-Object Identity, Description | Out-GridView -OutputMode Single -Title "Please select a Dial Plan to copy to."
 $NR=(Get-CsTenantDialPlan -Identity $FromDialPlan.Identity).NormalizationRules
+
+# Copy Normalisation Rules to selected Dial Plan
 Set-CsTenantDialPlan -Identity $ToDialPlan.Identity -NormalizationRules @{add=$nr}
 Write-Host "Normalisation Rules copied from $($FromDialPlan.Identity) to $($ToDialPlan.Identity)"
+
+# Shows updated normalisation Rules of selected Dial Plan
 (Get-CsTenantDialPlan -Identity $ToDialPlan.Identity).NormalizationRules
+
 Write-Host "Script completed"
